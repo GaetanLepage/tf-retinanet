@@ -13,10 +13,13 @@ limitations under the License.
 
 
 def import_package(name, package_type):
-	try:
-		package = __import__(package_type, fromlist=[name])
-		package = getattr(package, name)
-	except ImportError as e:
-		raise Exception(name + ' is not present in ' + package_type) from e
+    """
+    TODO
+    """
+    try:
+        package = __import__(package_type, fromlist=[name])
+        package = getattr(package, name)
+    except ImportError as exception:
+        raise Exception(name + ' is not present in ' + package_type) from exception
 
-	return package
+    return package

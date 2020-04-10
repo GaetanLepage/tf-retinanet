@@ -15,111 +15,118 @@ from ...utils import import_package
 
 
 class SubmodelsManager(object):
-	""" Class that parses submodels from configuration and creates them.
-	"""
-	def __init__(self, config):
-		""" Initialize the manager.
-		Args:
-			config : configuration dictionary.
-					 It should contain a list of submodels, each of which should be a dictionary containing:
-						category : The category of submodel to be parsed (bbox_regression, classification, etc.).
-						details  : A dictionary with details about the submodel. Refer to each submodel class for more info.
-					 If not specified, default classification and bbox regression will be used.
-		"""
-		self.classification       = None
-		self.regression           = None
-		self.additional_submodels = []
+    """
+    Class that parses submodels from configuration and creates them.
+    """
+    def __init__(self, config):
+        """
+        Initialize the manager.
 
-		# Loop through the specified submodels.
-		for submodel in config['retinanet']:
-			# Add details key, if not specified. Each submodel will fill it with its defaults.
-			if 'details' not in submodel:
-				submodel['details'] = {}
+        Args:
+            config : configuration dictionary.
+                     It should contain a list of submodels, each of which should be a dictionary containing:
+                        category : The category of submodel to be parsed (bbox_regression, classification, etc.).
+                        details  : A dictionary with details about the submodel. Refer to each submodel class for more info.
+                     If not specified, default classification and bbox regression will be used.
+        """
+        self.classification = None
+        self.regression = None
+        self.additional_submodels = []
 
-			# Parse the submodels.
-			if 'category' not in submodel:
-				raise ValueError("A submodel category was not specified.")
-			elif submodel['category'] == 'default_regression':
-				from .regression import BboxRegressionSubmodel
-				submodel['class'] = BboxRegressionSubmodel
-				self.regression = submodel
-				continue
-			elif submodel['category'] == 'default_classification':
-				from .classification import ClassificationSubmodel
-				submodel['class'] = ClassificationSubmodel
-				self.classification = submodel
-				continue
-			else:
-				# Parse submodels from external package.
-				submodel_package  = import_package(submodel['category'], 'tf_retinanet_submodels')
-				submodel['class'] = submodel_package.parse_submodel(submodel['details'])
-				# If the submodel is indicated as main, set it as such in the local submodels.
-				if 'main_classification' in submodel and submodel['main_classification']:
-					self.classification = submodel
-					continue
-				if 'main_regression' in submodel and submodel['main_regression']:
-					self.regression = submodel
-					continue
-				self.additional_submodels.append(submodel)
+        # Loop through the specified submodels.
+        for submodel in config['retinanet']:
+            # Add details key, if not specified. Each submodel will fill it with its defaults.
+            if 'details' not in submodel:
+                submodel['details'] = {}
 
-		# We need at least a main classification and a regression submodel to build RetinaNet.
-		if not self.classification:
-			raise ValueError("Could not find main classification submodel.")
-		if not self.regression:
-			raise ValueError("Could not find main regression submodel.")
+            # Parse the submodels.
+            if 'category' not in submodel:
+                raise ValueError("A submodel category was not specified.")
+            elif submodel['category'] == 'default_regression':
+                from .regression import BboxRegressionSubmodel
+                submodel['class'] = BboxRegressionSubmodel
+                self.regression = submodel
+                continue
+            elif submodel['category'] == 'default_classification':
+                from .classification import ClassificationSubmodel
+                submodel['class'] = ClassificationSubmodel
+                self.classification = submodel
+                continue
+            else:
+                # Parse submodels from external package.
+                submodel_package  = import_package(submodel['category'], 'tf_retinanet_submodels')
+                submodel['class'] = submodel_package.parse_submodel(submodel['details'])
+                # If the submodel is indicated as main, set it as such in the local submodels.
+                if 'main_classification' in submodel and submodel['main_classification']:
+                    self.classification = submodel
+                    continue
+                if 'main_regression' in submodel and submodel['main_regression']:
+                    self.regression = submodel
+                    continue
+                self.additional_submodels.append(submodel)
 
-	def create(self, num_classes=None):
-		""" Initialize the submodels classes that were provided.
-		Args:
-			num_classes: number of classification classes.
-		"""
-		# If the number of classes is provided, add the information to the classification details.
-		# It is necessary for COCO, where the number of classes comes form the generator and not the config file.
-		if num_classes:
-			self.classification['details']['num_classes'] = num_classes
+        # We need at least a main classification and a regression submodel to build RetinaNet.
+        if not self.classification:
+            raise ValueError("Could not find main classification submodel.")
+        if not self.regression:
+            raise ValueError("Could not find main regression submodel.")
 
-		# Initialize main regression and classification submodels.
-		self.regression     = self.regression['class'](self.regression['details'])
-		self.classification = self.classification['class'](self.classification['details'])
 
-		# Initialize and append all provided submodels.
-		self.submodels = []
-		self.submodels.append(self.regression)
-		self.submodels.append(self.classification)
-		for submodel in self.additional_submodels:
-			self.submodels.append(submodel['class'](submodel['details']))
+    def create(self, num_classes=None):
+        """ Initialize the submodels classes that were provided.
+        Args:
+            num_classes: number of classification classes.
+        """
+        # If the number of classes is provided, add the information to the classification details.
+        # It is necessary for COCO, where the number of classes comes form the generator and not
+        #       the config file.
+        if num_classes:
+            self.classification['details']['num_classes'] = num_classes
 
-	def get_submodels(self):
-		""" Return the submodels.
-		"""
-		return self.submodels
+        # Initialize main regression and classification submodels.
+        self.regression = self.regression['class'](self.regression['details'])
+        self.classification = self.classification['class'](self.classification['details'])
 
-	def get_evaluation(self):
-		""" Get evaluation procedure from submodels, or use default.
-		"""
-		evaluations = []
-		for submodel in self.submodels:
-			evaluations.append(submodel.get_evaluation()) if submodel.get_evaluation() is not None else []
+        # Initialize and append all provided submodels.
+        self.submodels = []
+        self.submodels.append(self.regression)
+        self.submodels.append(self.classification)
+        for submodel in self.additional_submodels:
+            self.submodels.append(submodel['class'](submodel['details']))
 
-		assert (len(evaluations) < 2), "More than one evaluation procedure has been provided."
 
-		if evaluations:
-			return evaluations[0]
-		else:
-			from ...utils.eval import evaluate
-			return evaluate
+    def get_submodels(self):
+        """ Return the submodels.
+        """
+        return self.submodels
 
-	def get_evaluation_callback(self):
-		""" Get evaluation callback from submodels, or use default.
-		"""
-		callbacks = []
-		for submodel in self.submodels:
-			callbacks.append(submodel.get_evaluation_callback()) if submodel.get_evaluation_callback() is not None else []
+    def get_evaluation(self):
+        """ Get evaluation procedure from submodels, or use default.
+        """
+        evaluations = []
+        for submodel in self.submodels:
+            evaluations.append(submodel.get_evaluation()) if submodel.get_evaluation() is not None else []
 
-		assert (len(callbacks) < 2), "More than one evaluation callback has been provided."
+        assert len(evaluations) < 2, "More than one evaluation procedure has been provided."
 
-		if callbacks:
-			return callbacks[0]
-		else:
-			from ...callbacks.eval import Evaluate
-			return Evaluate
+        if evaluations:
+            return evaluations[0]
+        else:
+            from ...utils.eval import evaluate
+            return evaluate
+
+    def get_evaluation_callback(self):
+        """
+        Get evaluation callback from submodels, or use default.
+        """
+        callbacks = []
+        for submodel in self.submodels:
+            callbacks.append(submodel.get_evaluation_callback()) if submodel.get_evaluation_callback() is not None else []
+
+        assert len(callbacks) < 2, "More than one evaluation callback has been provided."
+
+        if callbacks:
+            return callbacks[0]
+
+        from ...callbacks.eval import Evaluate
+        return Evaluate
