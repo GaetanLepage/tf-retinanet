@@ -107,6 +107,7 @@ class Generator(tf.keras.utils.Sequence):
         if self.shuffle_groups:
             self.on_epoch_end()
 
+
     def __from_config__(
             self,
             config,

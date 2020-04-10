@@ -39,7 +39,8 @@ from ..utils.config import dump_yaml, make_training_config
 
 
 def parse_args(args):
-    """ Parse the command line arguments.
+    """
+    Parse the command line arguments.
     """
     parser = argparse.ArgumentParser(
         description='Simple training script for training a RetinaNet network.')
