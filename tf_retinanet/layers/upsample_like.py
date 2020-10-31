@@ -32,13 +32,18 @@ class UpsampleLike(tf.keras.layers.Layer):
         source, target = inputs
         target_shape = tf.keras.backend.shape(target)
         if tf.keras.backend.image_data_format() == 'channels_first':
-            source = tf.transpose(source, (0, 2, 3, 1))
+            source = tf.transpose(
+                a=source,
+                perm=(0, 2, 3, 1))
             output = tf.image.resize(
                 images=source,
                 size=(target_shape[2], target_shape[3]),
                 method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-            output = tf.transpose(output, (0, 3, 1, 2))
+            output = tf.transpose(
+                a=output,
+                perm=(0, 3, 1, 2))
             return output
+
         return tf.image.resize(
             images=source,
             size=(target_shape[1], target_shape[2]),

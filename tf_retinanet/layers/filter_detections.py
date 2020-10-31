@@ -204,7 +204,7 @@ class FilterDetections(tf.keras.layers.Layer):
 
         # Call filter_detections on each batch.
         outputs = tf.map_fn(
-            _filter_detections,
+            fn=_filter_detections,
             elems=[boxes, classification, other],
             dtype=[
                 tf.keras.backend.floatx(),

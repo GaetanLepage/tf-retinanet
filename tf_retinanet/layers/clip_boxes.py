@@ -30,17 +30,33 @@ class ClipBoxes(tf.keras.layers.Layer):
             inputs: List of [image, boxes] tensors.
         """
         image, boxes = inputs
-        shape = tf.keras.backend.cast(tf.keras.backend.shape(image), tf.keras.backend.floatx())
+        shape = tf.keras.backend.cast(
+            x=tf.keras.backend.shape(image),
+            dtype=tf.keras.backend.floatx())
+
         if tf.keras.backend.image_data_format() == 'channels_first':
             height = shape[2]
             width = shape[3]
         else:
             height = shape[1]
             width = shape[2]
-        x_1 = tf.clip_by_value(boxes[:, :, 0], 0, width - 1)
-        y_1 = tf.clip_by_value(boxes[:, :, 1], 0, height - 1)
-        x_2 = tf.clip_by_value(boxes[:, :, 2], 0, width - 1)
-        y_2 = tf.clip_by_value(boxes[:, :, 3], 0, height - 1)
+
+        x_1 = tf.clip_by_value(
+            t=boxes[:, :, 0],
+            clip_value_min=0,
+            clip_value_max=width - 1)
+        y_1 = tf.clip_by_value(
+            t=boxes[:, :, 1],
+            clip_value_min=0,
+            clip_value_max=height - 1)
+        x_2 = tf.clip_by_value(
+            t=boxes[:, :, 2],
+            clip_value_min=0,
+            clip_value_max=width - 1)
+        y_2 = tf.clip_by_value(
+            t=boxes[:, :, 3],
+            clip_value_min=0,
+            clip_value_max=height - 1)
 
         return tf.keras.backend.stack([x_1, y_1, x_2, y_2], axis=2)
 

@@ -39,7 +39,8 @@ class AnchorParameters:
 
     def num_anchors(self):
         """
-        TODO
+        Returns:
+            The number of anchors at each location
         """
         return len(self.ratios) * len(self.scales)
 
@@ -227,11 +228,14 @@ def make_shapes_callback(model):
 
 
 def guess_shapes(image_shape, pyramid_levels):
-    """Guess shapes based on pyramid levels.
-    Args
+    """
+    Guess shapes based on pyramid levels.
+
+    Args:
         image_shape: The shape of the image.
         pyramid_levels: A list of what pyramid levels are used.
-    Returns
+
+    Returns:
         A list of image shapes at each pyramid level.
     """
     image_shape = np.array(image_shape[:2])
@@ -245,7 +249,8 @@ def anchors_for_shape(
         anchor_params=None,
         shapes_callback=None,
 ):
-    """ Generators anchors for a given shape.
+    """
+    Generators anchors for a given shape.
 
     Args:
         image_shape:        The shape of the image.
@@ -336,7 +341,10 @@ def generate_anchors(base_size=16, ratios=None, scales=None):
     anchors = np.zeros((num_anchors, 4))
 
     # Scale base_size.
-    anchors[:, 2:] = base_size * np.tile(scales, (2, len(ratios))).T
+    anchors[:, 2:] = base_size * np.tile(
+        A=scales,
+        reps=(2, len(ratios))
+        ).T
 
     # Compute areas of anchors.
     areas = anchors[:, 2] * anchors[:, 3]
@@ -390,7 +398,8 @@ def bbox_transform(anchors, gt_boxes, mean=None, std=None):
 
 
 def parse_anchor_parameters(anchors_config):
-    """ Parse anchors parameters from a dict.
+    """
+    Parse anchors parameters from a dict.
     """
     ratios = np.array(anchors_config['ratios'], tf.keras.backend.floatx())
     scales = np.array(anchors_config['scales'], tf.keras.backend.floatx())

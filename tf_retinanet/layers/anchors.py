@@ -23,10 +23,16 @@ from .. import backend
 
 class Anchors(tf.keras.layers.Layer):
     """
-    Keras layer for generating achors for a given shape.
+    Keras layer for generating anchors for a given shape.
     """
 
-    def __init__(self, size, stride, ratios=None, scales=None, *args, **kwargs):
+    def __init__(
+            self,
+            size,
+            stride,
+            ratios=None,
+            scales=None,
+            *args, **kwargs):
         """
         Initializer for an Anchors layer.
 
@@ -81,13 +87,14 @@ class Anchors(tf.keras.layers.Layer):
                 anchors=self.anchors)
         else:
             anchors = backend.shift(
-                image_shape[1:3],
-                features_shape[1:3],
-                self.stride, self.anchors)
+                image_shape=image_shape[1:3],
+                features_shape=features_shape[1:3],
+                stride=self.stride,
+                anchors=self.anchors)
 
         anchors = tf.keras.backend.tile(
-            tf.keras.backend.expand_dims(anchors, axis=0),
-            (features_shape[0], 1, 1))
+            x=tf.keras.backend.expand_dims(anchors, axis=0),
+            n=(features_shape[0], 1, 1))
 
         return anchors
 

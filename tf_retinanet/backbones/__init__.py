@@ -17,7 +17,7 @@ limitations under the License.
 from ..utils import import_package
 
 
-class Backbone(object):
+class Backbone:
     """
     This class stores additional information on backbones.
     """

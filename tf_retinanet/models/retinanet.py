@@ -89,11 +89,12 @@ def retinanet(
 
     Args:
         inputs:                     keras.layers.Input (or list of) for the input to the model.
+        backbone_layers:            TODO
+        submodels:                  Submodels to run on each feature map (default is regression
+                                        and classification submodels).
         num_anchors:                Number of base anchors.
         create_pyramid_features:    Functor for creating pyramid features given the features C3,
                                         C4, C5 from the backbone.
-        submodels:                  Submodels to run on each feature map (default is regression
-                                        and classification submodels).
         name:                       Name of the model.
 
     Returns:
@@ -210,7 +211,10 @@ def retinanet_bbox(
     )([boxes, classification] + other)
 
     # Construct the model.
-    return tf.keras.models.Model(inputs=model.inputs, outputs=detections, name=name)
+    return tf.keras.models.Model(
+        inputs=model.inputs,
+        outputs=detections,
+        name=name)
 
 
 def convert_model(
